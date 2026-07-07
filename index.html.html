@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora Matemática Avanzada v2.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── TOKENS ─────────────────────────────────────────── */
+    :root {
+      --bg:        #0D1117;
+      --surface:   #161B22;
+      --surface2:  #1C2331;
+      --border:    #30363D;
+      --border2:   #21262D;
+      --violet:    #7C3AED;
+      --violet-l:  #A78BFA;
+      --violet-d:  #5B21B6;
+      --cyan:      #06B6D4;
+      --cyan-l:    #67E8F9;
+      --amber:     #F59E0B;
+      --amber-l:   #FCD34D;
+      --green:     #10B981;
+      --green-l:   #6EE7B7;
+      --red:       #EF4444;
+      --red-l:     #FCA5A5;
+      --text:      #E6EDF3;
+      --text-dim:  #8B949E;
+      --text-faint:#484F58;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Inter', sans-serif;
+      --radius: 10px;
+      --shadow: 0 4px 24px rgba(0,0,0,.4);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ─── HEADER ─────────────────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+    .logo-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--violet), var(--cyan));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      background: rgba(124,58,237,.2);
+      color: var(--violet-l);
+      border: 1px solid rgba(124,58,237,.3);
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: .5px;
+    }
+
+    /* ─── LAYOUT ─────────────────────────────────────────── */
+    .app {
+      display: flex;
+      flex: 1;
+      min-height: calc(100vh - 60px);
+    }
+
+    /* ─── SIDEBAR ────────────────────────────────────────── */
+    .sidebar {
+      width: 230px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 16px 12px;
+      gap: 4px;
+      overflow-y: auto;
+    }
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-faint);
+      padding: 8px 8px 4px;
+    }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      text-align: left;
+      width: 100%;
+      transition: all .15s;
+    }
+    .nav-btn:hover { background: var(--surface2); color: var(--text); }
+    .nav-btn.active {
+      background: rgba(124,58,237,.15);
+      color: var(--violet-l);
+      border: 1px solid rgba(124,58,237,.25);
+    }
+    .nav-icon { font-size: 16px; flex-shrink: 0; width: 20px; text-align: center; }
+
+    /* ─── MAIN ───────────────────────────────────────────── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .workspace {
+      flex: 1;
+      display: flex;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    /* ─── PANEL IZQUIERDO: INPUTS ────────────────────────── */
+    .panel-input {
+      width: 380px;
+      flex-shrink: 0;
+      padding: 24px;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .module-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .module-title h2 {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .module-desc {
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .field-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: .3px;
+    }
+    .field-group input, .field-group select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: var(--mono);
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s;
+      width: 100%;
+    }
+    .field-group input:focus, .field-group select:focus {
+      border-color: var(--violet);
+      box-shadow: 0 0 0 3px rgba(124,58,237,.15);
+    }
+    .field-group select option { background: var(--surface2); }
+
+    .calc-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, var(--violet), var(--violet-d));
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      letter-spacing: .2px;
+    }
+    .calc-btn:hover { opacity: .9; transform: translateY(-1px); }
+    .calc-btn:active { transform: translateY(0); }
+    .calc-btn.secondary {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ─── PANEL DERECHO: RESULTADOS ──────────────────────── */
+    .panel-result {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .result-header h3 {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .clear-btn {
+      font-size: 12px;
+      color: var(--text-faint);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--sans);
+      transition: color .15s;
+    }
+    .clear-btn:hover { color: var(--red-l); }
+
+    /* ─── BLOQUE DE RESULTADO ────────────────────────────── */
+    .result-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      animation: slideIn .25s ease-out;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .result-block .rb-header {
+      padding: 10px 16px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border2);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-faint);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rb-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--violet);
+    }
+    .rb-body { padding: 16px; }
+
+    /* ─── VALOR PRINCIPAL ────────────────────────────────── */
+    .big-result {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .big-num {
+      font-family: var(--mono);
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--cyan-l);
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+    .big-label {
+      font-size: 12px;
+      color: var(--text-faint);
+      padding-bottom: 6px;
+      font-family: var(--mono);
+    }
+
+    /* ─── STEPS ──────────────────────────────────────────── */
+    .steps { display: flex; flex-direction: column; gap: 10px; }
+    .step {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      animation: fadeStep .3s ease-out both;
+    }
+    .step:nth-child(1) { animation-delay: .05s }
+    .step:nth-child(2) { animation-delay: .10s }
+    .step:nth-child(3) { animation-delay: .15s }
+    .step:nth-child(4) { animation-delay: .20s }
+    .step:nth-child(5) { animation-delay: .25s }
+    .step:nth-child(6) { animation-delay: .30s }
+    .step:nth-child(7) { animation-delay: .35s }
+    .step:nth-child(8) { animation-delay: .40s }
+    @keyframes fadeStep {
+      from { opacity: 0; transform: translateX(-6px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .step-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: rgba(124,58,237,.2);
+      border: 1px solid rgba(124,58,237,.3);
+      color: var(--violet-l);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .step-content { flex: 1; }
+    .step-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--text-faint);
+      margin-bottom: 4px;
+    }
+    .step-val {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .step-val .hi-cyan  { color: var(--cyan-l); }
+    .step-val .hi-amber { color: var(--amber-l); }
+    .step-val .hi-green { color: var(--green-l); }
+    .step-val .hi-violet{ color: var(--violet-l); }
+    .step-val .hi-red   { color: var(--red-l); }
+    .step-val .hi-dim   { color: var(--text-faint); }
+
+    /* ─── TABLA DE PASOS ─────────────────────────────────── */
+    .step-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+    .step-table th {
+      background: var(--surface2);
+      color: var(--text-faint);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      padding: 6px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .step-table td {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border2);
+      color: var(--text);
+    }
+    .step-table tr:last-child td { border-bottom: none; }
+    .step-table td.num { color: var(--cyan-l); text-align: right; }
+    .step-table td.res { color: var(--amber-l); }
+    .step-table td.ok  { color: var(--green-l); }
+
+    /* ─── CHIP / PILL ────────────────────────────────────── */
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+    .chip {
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(6,182,212,.1);
+      border: 1px solid rgba(6,182,212,.2);
+      color: var(--cyan-l);
+    }
+    .chip.amber {
+      background: rgba(245,158,11,.1);
+      border-color: rgba(245,158,11,.2);
+      color: var(--amber-l);
+    }
+    .chip.green {
+      background: rgba(16,185,129,.1);
+      border-color: rgba(16,185,129,.2);
+      color: var(--green-l);
+    }
+    .chip.violet {
+      background: rgba(124,58,237,.1);
+      border-color: rgba(124,58,237,.2);
+      color: var(--violet-l);
+    }
+    .chip.red {
+      background: rgba(239,68,68,.1);
+      border-color: rgba(239,68,68,.2);
+      color: var(--red-l);
+    }
+
+    /* ─── ALERTA / VERIFICACIÓN ──────────────────────────── */
+    .verify-box {
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .verify-box.ok {
+      background: rgba(16,185,129,.08);
+      border: 1px solid rgba(16,185,129,.25);
+      color: var(--green-l);
+    }
+    .verify-box.err {
+      background: rgba(239,68,68,.08);
+      border: 1px solid rgba(239,68,68,.25);
+      color: var(--red-l);
+    }
+    .verify-box.info {
+      background: rgba(124,58,237,.08);
+      border: 1px solid rgba(124,58,237,.2);
+      color: var(--violet-l);
+    }
+
+    /* ─── EMPTY STATE ────────────────────────────────────── */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--text-faint);
+      padding: 40px;
+      text-align: center;
+    }
+    .empty-icon { font-size: 48px; opacity: .3; }
+    .empty-state p { font-size: 14px; line-height: 1.6; max-width: 260px; }
+
+    /* ─── CALCULADORA RÁPIDA ─────────────────────────────── */
+    .quick-output {
+      font-family: var(--mono);
+      font-size: 13px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      min-height: 120px;
+      max-height: 300px;
+      overflow-y: auto;
+      line-height: 1.8;
+    }
+    .quick-line { display: flex; gap: 10px; }
+    .quick-prompt { color: var(--text-faint); }
+    .quick-expr   { color: var(--text); }
+    .quick-eq     { color: var(--text-faint); }
+    .quick-res    { color: var(--cyan-l); font-weight: 600; }
+    .quick-err    { color: var(--red-l); }
+
+    /* ─── DIVISOR ────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: var(--border2);
+      margin: 4px 0;
+    }
+
+    /* ─── SCROLLBAR ──────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .sidebar { width: 52px; padding: 12px 6px; }
+      .nav-btn span { display: none; }
+      .sidebar-label { display: none; }
+      .panel-input { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+      .workspace { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  HEADER                                                 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">∑</div>
+    <div>
+      <div>Calculadora Matemática</div>
+      <div style="font-size:10px;font-weight:400;color:var(--text-dim);font-family:var(--sans)">Avanzada — Paso a Paso</div>
+    </div>
+  </div>
+  <span class="badge">v 2.0</span>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  APP                                                    -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="app">
+
+  <!-- ── SIDEBAR ──────────────────────────────────────── -->
+  <nav class="sidebar">
+    <div class="sidebar-label">Módulos</div>
+    <button class="nav-btn active" onclick="showModule('division')">
+      <span class="nav-icon">➗</span><span>División detallada</span>
+    </button>
+    <button class="nav-btn" onclick="showModule('potencias')">
+      <span class="nav-icon">⚡</span><span>Potencias y raíces</span>
+    </button>
+    <button class="nav-btn" onclick="showModule('cuadratica')">
+      <span class="nav-icon">📐</span><span>Ecuación cuadrática</span>
+    </button>
+    <button class="nav-btn" onclick="showModule('fracciones')">
+      <span class="nav-icon">🔢</span><span>Fracciones</span>
+    </button>
+    <button class="nav-btn" onclick="showModule('estadistica')">
+      <span class="nav-icon">📊</span><span>Estadística</span>
+    </button>
+    <button class="nav-btn" onclick="showModule('trigonometria')">
+      <span class="nav-icon">📐</span><span>Trigonometría</span>
+    </button>
+    <button class="nav-btn" onclick="showModule('factorizacion')">
+      <span class="nav-icon">🔍</span><span>Factorización</span>
+    </button>
+    <button class="nav-btn" onclick="showModule('bases')">
+      <span class="nav-icon">🔄</span><span>Bases numéricas</span>
+    </button>
+    <button class="nav-btn" onclick="showModule('rapida')">
+      <span class="nav-icon">⚡</span><span>Calc. rápida</span>
+    </button>
+  </nav>
+
+  <!-- ── MAIN ─────────────────────────────────────────── -->
+  <div class="main">
+    <div class="workspace">
+
+      <!-- INPUT PANEL -->
+      <div class="panel-input" id="inputPanel">
+        <!-- contenido dinámico -->
+      </div>
+
+      <!-- RESULT PANEL -->
+      <div class="panel-result" id="resultPanel">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">∑</div>
+          <p>Selecciona un módulo, ingresa tus datos y presiona <strong>Calcular</strong> para ver el resultado paso a paso.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  JAVASCRIPT                                             -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<script>
+// ──────────────────────────────────────────────────────────
+//  UTILIDADES
+// ──────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function fmt(n, dec = 8) {
+  if (typeof n !== 'number' || isNaN(n)) return String(n);
+  if (!isFinite(n)) return n > 0 ? '+∞' : '-∞';
+  if (Math.abs(n - Math.round(n)) < 1e-12 && Math.abs(n) < 1e15)
+    return Math.round(n).toLocaleString('es');
+  return parseFloat(n.toFixed(dec)).toLocaleString('es', { maximumFractionDigits: dec });
+}
+
+function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { [a, b] = [b, a % b]; } return a; }
+function lcm(a, b) { return Math.abs(a * b) / gcd(a, b); }
+
+function esPrimo(n) {
+  if (n < 2) return false;
+  if (n === 2) return true;
+  if (n % 2 === 0) return false;
+  for (let i = 3; i <= Math.sqrt(n); i += 2) if (n % i === 0) return false;
+  return true;
+}
+
+function factorizar(n) {
+  const f = {};
+  let d = 2;
+  while (d * d <= n) {
+    while (n % d === 0) { f[d] = (f[d] || 0) + 1; n = Math.floor(n / d); }
+    d++;
+  }
+  if (n > 1) f[n] = (f[n] || 0) + 1;
+  return f;
+}
+
+function hi(txt, cls) { return `<span class="hi-${cls}">${txt}</span>`; }
+function chip(txt, cls = '') { return `<span class="chip ${cls}">${txt}</span>`; }
+
+function addResult(title, html) {
+  const panel = $('resultPanel');
+  const empty = $('emptyState');
+  if (empty) empty.remove();
+
+  const block = document.createElement('div');
+  block.className = 'result-block';
+  block.innerHTML = `
+    <div class="rb-header"><div class="rb-dot"></div>${title}</div>
+    <div class="rb-body">${html}</div>`;
+  panel.appendChild(block);
+  block.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
+
+function clearResults() {
+  const panel = $('resultPanel');
+  panel.innerHTML = `<div class="empty-state" id="emptyState">
+    <div class="empty-icon">∑</div>
+    <p>Selecciona un módulo, ingresa tus datos y presiona <strong>Calcular</strong>.</p>
+  </div>`;
+}
+
+// ──────────────────────────────────────────────────────────
+//  MÓDULOS — TEMPLATES HTML
+// ──────────────────────────────────────────────────────────
+const MODULES = {
+
+  division: {
+    title: 'División Detallada',
+    icon: '➗',
+    desc: 'Muestra cociente, residuo, comprobación y el proceso de división larga paso a paso.',
+    html: `
+      <div class="module-title"><span style="font-size:22px">➗</span><h2>División Detallada</h2></div>
+      <p class="module-desc">Muestra cociente, residuo, comprobación y el proceso de división larga.</p>
+      <div class="field-group"><label>Dividendo</label><input id="d_dividendo" type="number" placeholder="ej. 125" /></div>
+      <div class="field-group"><label>Divisor</label><input id="d_divisor" type="number" placeholder="ej. 7" /></div>
+      <button class="calc-btn" onclick="calcDivision()">▶ Calcular División</button>
+      <button class="calc-btn secondary" onclick="clearResults()">✕ Limpiar</button>`,
+    calc: 'calcDivision'
+  },
+
+  potencias: {
+    title: 'Potencias y Raíces',
+    icon: '⚡',
+    desc: 'Calcula potencias, tabla de exponentes, raíces n-ésimas y logaritmos.',
+    html: `
+      <div class="module-title"><span style="font-size:22px">⚡</span><h2>Potencias y Raíces</h2></div>
+      <p class="module-desc">Potencias, tabla de exponentes, raíces y logaritmos con desglose.</p>
+      <div class="field-group"><label>Base</label><input id="p_base" type="number" placeholder="ej. 2" /></div>
+      <div class="field-group"><label>Exponente</label><input id="p_exp" type="number" step="any" placeholder="ej. 8" /></div>
+      <button class="calc-btn" onclick="calcPotencias()">▶ Calcular</button>
+      <button class="calc-btn secondary" onclick="clearResults()">✕ Limpiar</button>`,
+  },
+
+  cuadratica: {
+    title: 'Ecuación Cuadrática',
+    icon: '📐',
+    html: `
+      <div class="module-title"><span style="font-size:22px">📐</span><h2>Ecuación Cuadrática</h2></div>
+      <p class="module-desc">Resuelve <strong style="font-family:var(--mono)">ax² + bx + c = 0</strong> con fórmula general, discriminante y verificación.</p>
+      <div class="row-2">
+        <div class="field-group"><label>a (x²)</label><input id="q_a" type="number" step="any" placeholder="ej. 1" /></div>
+        <div class="field-group"><label>b (x)</label><input id="q_b" type="number" step="any" placeholder="ej. -5" /></div>
+      </div>
+      <div class="field-group"><label>c (independiente)</label><input id="q_c" type="number" step="any" placeholder="ej. 6" /></div>
+      <button class="calc-btn" onclick="calcCuadratica()">▶ Resolver</button>
+      <button class="calc-btn secondary" onclick="clearResults()">✕ Limpiar</button>`,
+  },
+
+  fracciones: {
+    title: 'Fracciones',
+    icon: '🔢',
+    html: `
+      <div class="module-title"><span style="font-size:22px">🔢</span><h2>Fracciones</h2></div>
+      <p class="module-desc">Operaciones exactas entre fracciones con desglose de cada paso.</p>
+      <p style="font-size:11px;color:var(--text-faint);font-family:var(--mono)">Fracción A</p>
+      <div class="row-2">
+        <div class="field-group"><label>Numerador A</label><input id="f_n1" type="number" placeholder="ej. 3" /></div>
+        <div class="field-group"><label>Denominador A</label><input id="f_d1" type="number" placeholder="ej. 4" /></div>
+      </div>
+      <p style="font-size:11px;color:var(--text-faint);font-family:var(--mono)">Fracción B</p>
+      <div class="row-2">
+        <div class="field-group"><label>Numerador B</label><input id="f_n2" type="number" placeholder="ej. 1" /></div>
+        <div class="field-group"><label>Denominador B</label><input id="f_d2" type="number" placeholder="ej. 3" /></div>
+      </div>
+      <button class="calc-btn" onclick="calcFracciones()">▶ Calcular todas</button>
+      <button class="calc-btn secondary" onclick="clearResults()">✕ Limpiar</button>`,
+  },
+
+  estadistica: {
+    title: 'Estadística',
+    icon: '📊',
+    html: `
+      <div class="module-title"><span style="font-size:22px">📊</span><h2>Estadística Descriptiva</h2></div>
+      <p class="module-desc">Media, mediana, moda, varianza, desviación estándar, cuartiles y más.</p>
+      <div class="field-group">
+        <label>Números (separados por espacios o comas)</label>
+        <input id="e_datos" type="text" placeholder="ej. 4 8 15 16 23 42" />
+      </div>
+      <button class="calc-btn" onclick="calcEstadistica()">▶ Analizar</button>
+      <button class="calc-btn secondary" onclick="clearResults()">✕ Limpiar</button>`,
+  },
+
+  trigonometria: {
+    title: 'Trigonometría',
+    icon: '📐',
+    html: `
+      <div class="module-title"><span style="font-size:22px">📐</span><h2>Trigonometría</h2></div>
+      <p class="module-desc">Sin, cos, tan, funciones recíprocas, inversas e identidades pitagóricas.</p>
+      <div class="field-group">
+        <label>Unidad del ángulo</label>
+        <select id="t_unidad">
+          <option value="grados">Grados (°)</option>
+          <option value="radianes">Radianes</option>
+        </select>
+      </div>
+      <div class="field-group"><label>Ángulo</label><input id="t_angulo" type="number" step="any" placeholder="ej. 45" /></div>
+      <button class="calc-btn" onclick="calcTrigonometria()">▶ Calcular</button>
+      <button class="calc-btn secondary" onclick="clearResults()">✕ Limpiar</button>`,
+  },
+
+  factorizacion: {
+    title: 'Factorización',
+    icon: '🔍',
+    html: `
+      <div class="module-title"><span style="font-size:22px">🔍</span><h2>Factorización y Primos</h2></div>
+      <p class="module-desc">Descomposición en factores primos, divisores, MCD, MCM y clasificación.</p>
+      <div class="field-group"><label>Número entero</label><input id="fa_n" type="number" placeholder="ej. 360" min="1" /></div>
+      <div class="field-group"><label>Segundo número (para MCD/MCM — opcional)</label><input id="fa_m" type="number" placeholder="ej. 120" /></div>
+      <button class="calc-btn" onclick="calcFactorizacion()">▶ Analizar</button>
+      <button class="calc-btn secondary" onclick="clearResults()">✕ Limpiar</button>`,
+  },
+
+  bases: {
+    title: 'Bases numéricas',
+    icon: '🔄',
+    html: `
+      <div class="module-title"><span style="font-size:22px">🔄</span><h2>Conversión de Bases</h2></div>
+      <p class="module-desc">Convierte entre Decimal, Binario, Octal y Hexadecimal con proceso visible.</p>
+      <div class="field-group">
+        <label>Base de origen</label>
+        <select id="b_base">
+          <option value="10">Decimal (base 10)</option>
+          <option value="2">Binario (base 2)</option>
+          <option value="8">Octal (base 8)</option>
+          <option value="16">Hexadecimal (base 16)</option>
+        </select>
+      </div>
+      <div class="field-group"><label>Número</label><input id="b_num" type="text" placeholder="ej. 255" /></div>
+      <button class="calc-btn" onclick="calcBases()">▶ Convertir</button>
+      <button class="calc-btn secondary" onclick="clearResults()">✕ Limpiar</button>`,
+  },
+
+  rapida: {
+    title: 'Calculadora rápida',
+    icon: '⚡',
+    html: `
+      <div class="module-title"><span style="font-size:22px">⚡</span><h2>Calculadora Rápida</h2></div>
+      <p class="module-desc">Evalúa expresiones directamente. Usa: <code style="color:var(--cyan-l)">sqrt, log, sin, cos, tan, PI, E, abs, factorial</code></p>
+      <div class="field-group">
+        <label>Expresión matemática</label>
+        <input id="r_expr" type="text" placeholder="ej. sqrt(144) + log(100)" onkeydown="if(event.key==='Enter') calcRapida()" />
+      </div>
+      <button class="calc-btn" onclick="calcRapida()">▶ Evaluar</button>
+      <button class="calc-btn secondary" onclick="clearResults()">✕ Limpiar</button>
+      <div class="divider"></div>
+      <p style="font-size:11px;color:var(--text-faint)">Funciones disponibles:</p>
+      <div class="chips" style="margin-top:4px">
+        ${['sqrt(x)','log(x)','log10(x)','sin(x)','cos(x)','tan(x)','asin(x)','acos(x)',
+           'atan(x)','abs(x)','factorial(n)','pow(x,n)','ceil(x)','floor(x)','PI','E'].map(f => chip(f)).join('')}
+      </div>`,
+  },
+};
+
+// ──────────────────────────────────────────────────────────
+//  NAVEGACIÓN
+// ──────────────────────────────────────────────────────────
+let currentModule = 'division';
+
+function showModule(name) {
+  currentModule = name;
+  const mod = MODULES[name];
+  $('inputPanel').innerHTML = mod.html;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.getAttribute('onclick')?.includes(`'${name}'`)) b.classList.add('active');
+  });
+  // focus primer input
+  setTimeout(() => { const first = $('inputPanel').querySelector('input'); if (first) first.focus(); }, 50);
+}
+
+// ──────────────────────────────────────────────────────────
+//  1. DIVISIÓN
+// ──────────────────────────────────────────────────────────
+function calcDivision() {
+  const dividendo = parseFloat($('d_dividendo').value);
+  const divisor   = parseFloat($('d_divisor').value);
+  if (isNaN(dividendo) || isNaN(divisor)) return alert('Ingresa ambos números.');
+  if (divisor === 0) return alert('El divisor no puede ser cero.');
+
+  const cociente_exacto = dividendo / divisor;
+  const cociente_entero = Math.floor(Math.abs(dividendo) / Math.abs(divisor)) * (dividendo < 0 !== divisor < 0 ? -1 : 1);
+  const residuo  = dividendo - divisor * cociente_entero;
+  const comprobacion = divisor * cociente_entero + residuo;
+  const ok       = Math.abs(comprobacion - dividendo) < 1e-9;
+
+  // División larga (solo enteros positivos pequeños)
+  let longDiv = '';
+  const esDivEntero = Number.isInteger(dividendo) && Number.isInteger(divisor) && Math.abs(dividendo) < 1e9;
+  if (esDivEntero) {
+    const d = Math.abs(dividendo), v = Math.abs(divisor);
+    const digitos = String(d).split('').map(Number);
+    let actual = 0;
+    const rows = digitos.map(dig => {
+      actual = actual * 10 + dig;
+      const c = Math.floor(actual / v);
+      const prod = c * v;
+      const resto = actual - prod;
+      const old = actual;
+      actual = resto;
+      return { bajado: old, cabe: c, producto: prod, resto };
+    });
+    longDiv = `<table class="step-table" style="margin-top:8px">
+      <thead><tr><th>Bajado</th><th>Cabe (÷${v})</th><th>Producto</th><th>Resto</th></tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td class="num">${r.bajado}</td>
+        <td class="ok">${r.cabe}</td>
+        <td class="num">${r.producto}</td>
+        <td class="res">${r.resto}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  }
+
+  // Fracción simplificada
+  let fracStr = '';
+  if (Number.isInteger(dividendo) && Number.isInteger(divisor)) {
+    const g = gcd(Math.abs(dividendo), Math.abs(divisor));
+    const fn = dividendo / g, fd = divisor / g;
+    fracStr = fd === 1 ? `${fn}` : `${fn}/${fd}`;
+  }
+
+  const html = `
+    <div class="big-result">
+      <div class="big-num">${fmt(cociente_exacto, 10)}</div>
+      <div class="big-label">resultado exacto</div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content">
+        <div class="step-title">Planteamiento</div>
+        <div class="step-val">${hi(fmt(dividendo), 'amber')} ÷ ${hi(fmt(divisor), 'violet')} = ?</div>
+      </div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content">
+        <div class="step-title">Cociente entero</div>
+        <div class="step-val">${hi(fmt(dividendo), 'amber')} ÷ ${hi(fmt(divisor), 'violet')} = ${hi(cociente_entero, 'cyan')}</div>
+        ${esDivEntero && longDiv ? '<div class="step-title" style="margin-top:8px">División larga paso a paso</div>' + longDiv : ''}
+      </div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content">
+        <div class="step-title">Residuo</div>
+        <div class="step-val">${hi(fmt(dividendo), 'amber')} − (${hi(fmt(divisor), 'violet')} × ${hi(cociente_entero, 'cyan')}) = ${hi(fmt(residuo), 'amber')}</div>
+      </div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content">
+        <div class="step-title">Verificación: Divisor × Cociente + Residuo = Dividendo</div>
+        <div class="verify-box ${ok ? 'ok' : 'err'}">
+          ${fmt(divisor)} × ${cociente_entero} + ${fmt(residuo)}<br>
+          = ${fmt(divisor * cociente_entero)} + ${fmt(residuo)}<br>
+          = ${hi(fmt(comprobacion), ok ? 'green' : 'red')} ${ok ? '✔ Correcto' : '✘ Error'}
+        </div>
+      </div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-content">
+        <div class="step-title">Propiedades</div>
+        <div class="chips">
+          ${chip(`Cociente: ${cociente_entero}`, 'green')}
+          ${chip(`Residuo: ${fmt(residuo)}`, residuo === 0 ? 'green' : 'amber')}
+          ${chip(`Exacto: ${fmt(cociente_exacto, 10)}`, '')}
+          ${fracStr ? chip(`Fracción: ${fracStr}`, 'violet') : ''}
+          ${chip(residuo === 0 ? 'Divisible ✔' : 'No divisible', residuo === 0 ? 'green' : 'amber')}
+        </div>
+      </div></div>
+    </div>`;
+
+  addResult(`➗ División: ${fmt(dividendo)} ÷ ${fmt(divisor)}`, html);
+}
+
+// ──────────────────────────────────────────────────────────
+//  2. POTENCIAS
+// ──────────────────────────────────────────────────────────
+function calcPotencias() {
+  const base = parseFloat($('p_base').value);
+  const exp  = parseFloat($('p_exp').value);
+  if (isNaN(base) || isNaN(exp)) return alert('Ingresa base y exponente.');
+
+  const resultado = Math.pow(base, exp);
+  const maxPow = Math.min(Math.max(Math.floor(Math.abs(exp)) + 3, 8), 14);
+
+  // Tabla de potencias
+  let tablaPow = `<table class="step-table"><thead><tr><th>Exponente</th><th>${fmt(base)} ^ n</th><th>= Resultado</th></tr></thead><tbody>`;
+  for (let e = 0; e <= maxPow; e++) {
+    const v = Math.pow(base, e);
+    const mark = e === exp ? ' style="background:rgba(124,58,237,.15)"' : '';
+    tablaPow += `<tr${mark}><td class="${e === exp ? 'ok' : 'num'}">${e}${e === exp ? ' ←' : ''}</td>
+      <td>${fmt(base)}^${e}</td><td class="num">${fmt(v, 6)}</td></tr>`;
+  }
+  tablaPow += '</tbody></table>';
+
+  // Raíces del resultado
+  const rBase = Math.abs(resultado);
+  const raices = [[2,'√',2],[3,'∛',3],[4,'∜',4],[5,'⁵√',5],[10,'¹⁰√',10]];
+  let raicesHtml = raices.map(([n, sym]) => {
+    const r = Math.pow(rBase, 1/n);
+    return `<tr><td>${sym}${fmt(rBase,4)}</td><td class="num">${fmt(r,8)}</td>
+      <td class="ok">${fmt(r,4)}^${n} ≈ ${fmt(Math.pow(r,n),4)}</td></tr>`;
+  }).join('');
+
+  // Logaritmos
+  const lnV  = rBase > 0 ? Math.log(rBase)   : null;
+  const lg2V = rBase > 0 ? Math.log2(rBase)  : null;
+  const lg10V= rBase > 0 ? Math.log10(rBase) : null;
+
+  const html = `
+    <div class="big-result">
+      <div class="big-num">${fmt(resultado, 8)}</div>
+      <div class="big-label">${fmt(base)} ^ ${fmt(exp)}</div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content">
+        <div class="step-title">Tabla de potencias (base ${fmt(base)})</div>
+        ${tablaPow}
+      </div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content">
+        <div class="step-title">Raíces del resultado (${fmt(resultado, 4)})</div>
+        <table class="step-table"><thead><tr><th>Raíz</th><th>Valor</th><th>Verificación</th></tr></thead>
+        <tbody>${raicesHtml}</tbody></table>
+      </div></div>
+      ${rBase > 0 ? `<div class="step"><div class="step-num">3</div><div class="step-content">
+        <div class="step-title">Logaritmos</div>
+        <div class="step-val">
+          ln(${fmt(rBase,4)})&nbsp;&nbsp;&nbsp;= ${hi(fmt(lnV,8), 'cyan')} ${hi('(base e)','dim')}<br>
+          log₂(${fmt(rBase,4)})&nbsp; = ${hi(fmt(lg2V,8), 'cyan')} ${hi('(base 2)','dim')}<br>
+          log₁₀(${fmt(rBase,4)}) = ${hi(fmt(lg10V,8), 'cyan')} ${hi('(base 10)','dim')}
+        </div>
+      </div></div>` : ''}
+    </div>`;
+
+  addResult(`⚡ Potencia: ${fmt(base)} ^ ${fmt(exp)}`, html);
+}
+
+// ──────────────────────────────────────────────────────────
+//  3. CUADRÁTICA
+// ──────────────────────────────────────────────────────────
+function calcCuadratica() {
+  const a = parseFloat($('q_a').value);
+  const b = parseFloat($('q_b').value);
+  const c = parseFloat($('q_c').value);
+  if (isNaN(a) || isNaN(b) || isNaN(c)) return alert('Completa los tres coeficientes.');
+  if (a === 0) return alert('El coeficiente "a" no puede ser cero (no sería cuadrática).');
+
+  const D = b*b - 4*a*c;
+  let x1, x2, tipo, esCompleja = false;
+
+  if (D > 0) {
+    x1 = (-b + Math.sqrt(D)) / (2*a);
+    x2 = (-b - Math.sqrt(D)) / (2*a);
+    tipo = `${chip('Δ > 0 — Dos raíces reales distintas','green')}`;
+  } else if (D === 0) {
+    x1 = x2 = -b / (2*a);
+    tipo = `${chip('Δ = 0 — Raíz real doble','amber')}`;
+  } else {
+    const re = -b/(2*a), im = Math.sqrt(-D)/(2*a);
+    x1 = `${fmt(re,6)} + ${fmt(im,6)}i`;
+    x2 = `${fmt(re,6)} − ${fmt(im,6)}i`;
+    esCompleja = true;
+    tipo = `${chip('Δ < 0 — Raíces complejas conjugadas','red')}`;
+  }
+
+  const r1ok = !esCompleja ? Math.abs(a*x1*x1 + b*x1 + c) < 1e-8 : false;
+  const r2ok = !esCompleja ? Math.abs(a*x2*x2 + b*x2 + c) < 1e-8 : false;
+
+  const sumVieta  = !esCompleja ? x1 + x2 : null;
+  const prodVieta = !esCompleja ? x1 * x2 : null;
+
+  const html = `
+    <div class="big-result">
+      <div>
+        <div style="font-family:var(--mono);font-size:13px;color:var(--text-faint);margin-bottom:4px">Ecuación</div>
+        <div style="font-family:var(--mono);font-size:20px;color:var(--text)">${fmt(a)}x² ${b>=0?'+ ':'− '}${fmt(Math.abs(b))}x ${c>=0?'+ ':'− '}${fmt(Math.abs(c))} = 0</div>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content">
+        <div class="step-title">Discriminante  Δ = b² − 4ac</div>
+        <div class="step-val">
+          b² = ${hi(fmt(b), 'amber')}² = ${hi(fmt(b*b), 'cyan')}<br>
+          4ac = 4 × ${hi(fmt(a), 'violet')} × ${hi(fmt(c), 'violet')} = ${hi(fmt(4*a*c), 'cyan')}<br>
+          ${hi('Δ', 'amber')} = ${fmt(b*b)} − ${fmt(4*a*c)} = ${hi(fmt(D), D>0 ? 'green' : D===0 ? 'amber' : 'red')}
+        </div>
+        <div class="chips" style="margin-top:8px">${tipo}</div>
+      </div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content">
+        <div class="step-title">Fórmula general</div>
+        <div class="step-val">x = (−b ± √Δ) / 2a = (${hi(fmt(-b),'cyan')} ± ${hi(fmt(Math.sqrt(Math.abs(D)),6),'amber')}) / ${hi(fmt(2*a),'violet')}</div>
+      </div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content">
+        <div class="step-title">Soluciones</div>
+        <div class="verify-box info">
+          x₁ = ${hi(String(typeof x1 === 'number' ? fmt(x1,8) : x1), 'cyan')}<br>
+          x₂ = ${hi(String(typeof x2 === 'number' ? fmt(x2,8) : x2), 'cyan')}
+        </div>
+      </div></div>
+      ${!esCompleja ? `
+      <div class="step"><div class="step-num">4</div><div class="step-content">
+        <div class="step-title">Verificación (sustituir en la ecuación)</div>
+        <div class="verify-box ${r1ok ? 'ok' : 'err'}">
+          x₁=${fmt(x1,6)}: ${fmt(a)}(${fmt(x1,4)})² + ${fmt(b)}(${fmt(x1,4)}) + ${fmt(c)} ≈ ${fmt(a*x1*x1+b*x1+c,6)} ${r1ok?'✔':'✘'}<br>
+          x₂=${fmt(x2,6)}: ${fmt(a)}(${fmt(x2,4)})² + ${fmt(b)}(${fmt(x2,4)}) + ${fmt(c)} ≈ ${fmt(a*x2*x2+b*x2+c,6)} ${r2ok?'✔':'✘'}
+        </div>
+      </div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-content">
+        <div class="step-title">Relaciones de Vieta</div>
+        <div class="step-val">
+          x₁ + x₂ = ${hi(fmt(sumVieta,6),'cyan')} ${hi('(debe ser −b/a = '+fmt(-b/a,6)+')','dim')}<br>
+          x₁ × x₂ = ${hi(fmt(prodVieta,6),'cyan')} ${hi('(debe ser c/a = '+fmt(c/a,6)+')','dim')}
+        </div>
+      </div></div>
+      <div class="step"><div class="step-num">6</div><div class="step-content">
+        <div class="step-title">Forma factorizada</div>
+        <div class="step-val">${fmt(a)}(x − ${hi(fmt(x1,4),'amber')})(x − ${hi(fmt(x2,4),'amber')})</div>
+      </div></div>` : ''}
+    </div>`;
+
+  addResult(`📐 Cuadrática: ${fmt(a)}x² ${b>=0?'+':''}${fmt(b)}x ${c>=0?'+':''}${fmt(c)} = 0`, html);
+}
+
+// ──────────────────────────────────────────────────────────
+//  4. FRACCIONES
+// ──────────────────────────────────────────────────────────
+function fracSimp(n, d) {
+  const g = gcd(Math.abs(n), Math.abs(d));
+  return [n/g, d/g];
+}
+function fracStr(n, d) {
+  const [sn, sd] = fracSimp(n, d);
+  return sd === 1 ? `${sn}` : `${sn}/${sd}`;
+}
+
+function calcFracciones() {
+  const n1 = parseInt($('f_n1').value), d1 = parseInt($('f_d1').value);
+  const n2 = parseInt($('f_n2').value), d2 = parseInt($('f_d2').value);
+  if ([n1,d1,n2,d2].some(isNaN)) return alert('Completa los cuatro campos.');
+  if (d1 === 0 || d2 === 0) return alert('El denominador no puede ser cero.');
+
+  const mcm_d = lcm(Math.abs(d1), Math.abs(d2));
+  const mcd_d = gcd(Math.abs(d1), Math.abs(d2));
+
+  const ops = [
+    {
+      sym: '+', name: 'Suma',
+      n: n1*(mcm_d/d1) + n2*(mcm_d/d2), d: mcm_d,
+      detalle: `${n1*(mcm_d/d1)}/${mcm_d} + ${n2*(mcm_d/d2)}/${mcm_d} = ${n1*(mcm_d/d1)+n2*(mcm_d/d2)}/${mcm_d}`
+    },
+    {
+      sym: '−', name: 'Resta',
+      n: n1*(mcm_d/d1) - n2*(mcm_d/d2), d: mcm_d,
+      detalle: `${n1*(mcm_d/d1)}/${mcm_d} − ${n2*(mcm_d/d2)}/${mcm_d} = ${n1*(mcm_d/d1)-n2*(mcm_d/d2)}/${mcm_d}`
+    },
+    {
+      sym: '×', name: 'Multiplicación',
+      n: n1*n2, d: d1*d2,
+      detalle: `(${n1}×${n2}) / (${d1}×${d2}) = ${n1*n2}/${d1*d2}`
+    },
+    {
+      sym: '÷', name: 'División',
+      n: n1*d2, d: d1*n2,
+      detalle: `${n1}/${d1} × ${d2}/${n2} = ${n1*d2}/${d1*n2}`
+    },
+  ];
+
+  const opsHtml = ops.map((op, i) => `
+    <div class="step">
+      <div class="step-num">${i+1}</div>
+      <div class="step-content">
+        <div class="step-title">${op.name}</div>
+        <div class="step-val">
+          ${hi(n1+'/'+d1,'amber')} ${op.sym} ${hi(n2+'/'+d2,'violet')}
+          = ${hi(op.detalle,'dim')}
+          = ${hi(fracStr(op.n,op.d),'cyan')} ≈ ${hi(fmt(op.n/op.d,8),'green')}
+        </div>
+      </div>
+    </div>`).join('');
+
+  const html = `
+    <div class="big-result">
+      <div class="big-num">${n1}/${d1}</div>
+      <div class="big-label" style="font-size:24px;color:var(--text-faint)">  ○  </div>
+      <div class="big-num">${n2}/${d2}</div>
+    </div>
+    <div class="chips" style="margin-bottom:12px">
+      ${chip(`MCD denominadores: ${mcd_d}`,'violet')}
+      ${chip(`MCM (denom. común): ${mcm_d}`,'amber')}
+    </div>
+    <div class="steps">${opsHtml}</div>`;
+
+  addResult(`🔢 Fracciones: ${n1}/${d1} ○ ${n2}/${d2}`, html);
+}
+
+// ──────────────────────────────────────────────────────────
+//  5. ESTADÍSTICA
+// ──────────────────────────────────────────────────────────
+function calcEstadistica() {
+  const raw = $('e_datos').value.replace(/,/g,' ').trim().split(/\s+/).map(Number).filter(v => !isNaN(v));
+  if (raw.length < 2) return alert('Ingresa al menos 2 números.');
+
+  const n   = raw.length;
+  const ord = [...raw].sort((a,b)=>a-b);
+  const suma = raw.reduce((a,b)=>a+b,0);
+  const media = suma / n;
+  const mediana = n%2===1 ? ord[Math.floor(n/2)] : (ord[n/2-1]+ord[n/2])/2;
+  const varianza = raw.reduce((s,x)=>s+(x-media)**2,0)/n;
+  const desv = Math.sqrt(varianza);
+  const desvM = Math.sqrt(raw.reduce((s,x)=>s+(x-media)**2,0)/(n-1));
+  const rang = ord[n-1]-ord[0];
+
+  // Moda
+  const freq = {};
+  raw.forEach(x => freq[x] = (freq[x]||0)+1);
+  const maxF = Math.max(...Object.values(freq));
+  const modas = maxF === 1 ? ['Sin moda'] : Object.keys(freq).filter(k=>freq[k]===maxF).map(Number);
+
+  // Cuartiles
+  const Q = p => {
+    const idx = p*(n-1)/100;
+    const lo = Math.floor(idx), hi = Math.ceil(idx);
+    return ord[lo] + (idx-lo)*(ord[hi]-ord[lo]);
+  };
+  const q1 = Q(25), q3 = Q(75);
+
+  const html = `
+    <div class="big-result">
+      <div><div style="font-family:var(--mono);font-size:12px;color:var(--text-faint)">Media aritmética</div>
+      <div class="big-num">${fmt(media,6)}</div></div>
+      <div><div style="font-family:var(--mono);font-size:12px;color:var(--text-faint)">Mediana</div>
+      <div class="big-num" style="font-size:28px">${fmt(mediana,6)}</div></div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content">
+        <div class="step-title">Datos ordenados (n=${n})</div>
+        <div class="step-val hi-dim">${ord.map(v=>`<span style="color:var(--cyan-l)">${fmt(v,3)}</span>`).join('  ')}</div>
+      </div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content">
+        <div class="step-title">Medidas de tendencia central</div>
+        <div class="step-val">
+          Suma (Σ)  = ${hi(fmt(suma,6),'amber')}<br>
+          Media (x̄) = ${hi(fmt(suma,4),'amber')} / ${n} = ${hi(fmt(media,8),'cyan')}<br>
+          Mediana   = ${hi(fmt(mediana,8),'cyan')}<br>
+          Moda      = ${hi(modas.map(m=>fmt(m,4)).join(', '),'violet')}
+        </div>
+      </div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content">
+        <div class="step-title">Dispersión</div>
+        <div class="step-val">
+          Rango          = ${hi(fmt(rang,6),'amber')}<br>
+          Varianza (σ²)  = ${hi(fmt(varianza,8),'cyan')}<br>
+          Desv. est. (σ) = ${hi(fmt(desv,8),'green')} ${hi('(población)','dim')}<br>
+          Desv. est. (s) = ${hi(fmt(desvM,8),'green')} ${hi('(muestra)','dim')}
+        </div>
+      </div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content">
+        <div class="step-title">Cuartiles y rango intercuartil</div>
+        <div class="step-val">
+          Mínimo = ${hi(fmt(ord[0]),'dim')} &nbsp; Q1 = ${hi(fmt(q1,4),'cyan')} &nbsp; Q2 = ${hi(fmt(mediana,4),'cyan')} &nbsp; Q3 = ${hi(fmt(q3,4),'cyan')} &nbsp; Máximo = ${hi(fmt(ord[n-1]),'dim')}<br>
+          Rango Intercuartil (IQR) = Q3 − Q1 = ${hi(fmt(q3-q1,6),'amber')}
+        </div>
+      </div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-content">
+        <div class="step-title">Verificación de la media</div>
+        <div class="verify-box ok">
+          Σ(xᵢ − x̄) = ${fmt(raw.reduce((s,x)=>s+(x-media),0),10)} ≈ 0 ✔
+        </div>
+      </div></div>
+    </div>`;
+
+  addResult(`📊 Estadística: ${n} datos`, html);
+}
+
+// ──────────────────────────────────────────────────────────
+//  6. TRIGONOMETRÍA
+// ──────────────────────────────────────────────────────────
+function calcTrigonometria() {
+  const unidad = $('t_unidad').value;
+  const angVal = parseFloat($('t_angulo').value);
+  if (isNaN(angVal)) return alert('Ingresa un ángulo válido.');
+
+  const rad   = unidad === 'grados' ? angVal * Math.PI / 180 : angVal;
+  const grados = unidad === 'grados' ? angVal : angVal * 180 / Math.PI;
+  const gradNorm = ((grados % 360) + 360) % 360;
+  const cuad = gradNorm < 90 ? 'I' : gradNorm < 180 ? 'II' : gradNorm < 270 ? 'III' : 'IV';
+
+  const sen = Math.sin(rad), cos = Math.cos(rad);
+  const tan = Math.abs(cos) > 1e-10 ? Math.tan(rad) : null;
+  const csc = Math.abs(sen) > 1e-10 ? 1/sen : null;
+  const sec = Math.abs(cos) > 1e-10 ? 1/cos : null;
+  const cot = Math.abs(sen) > 1e-10 ? cos/sen : null;
+
+  const fmtT = v => v === null ? hi('Indefinida','red') : hi(fmt(v,8),'cyan');
+
+  const id1 = sen*sen + cos*cos;
+  const id2 = 2*sen*cos;
+  const id3 = cos*cos - sen*sen;
+
+  const html = `
+    <div class="big-result">
+      <div><div style="font-family:var(--mono);font-size:12px;color:var(--text-faint)">Ángulo</div>
+      <div class="big-num">${fmt(grados,4)}°</div></div>
+      <div><div style="font-family:var(--mono);font-size:12px;color:var(--text-faint)">Radianes</div>
+      <div class="big-num" style="font-size:24px">${fmt(rad,8)}</div></div>
+    </div>
+    <div class="chips" style="margin-bottom:12px">
+      ${chip('Cuadrante '+cuad,'violet')}
+      ${chip(fmt(gradNorm,2)+'° normalizado','amber')}
+      ${chip(fmt(grados/360,4)+' vuelta(s)','dim')}
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content">
+        <div class="step-title">Funciones principales</div>
+        <div class="step-val">
+          seno   (sin) = ${fmtT(sen)}<br>
+          coseno (cos) = ${fmtT(cos)}<br>
+          tangente(tan)= ${fmtT(tan)}
+        </div>
+      </div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content">
+        <div class="step-title">Funciones recíprocas</div>
+        <div class="step-val">
+          cosecante (csc) = ${fmtT(csc)}<br>
+          secante   (sec) = ${fmtT(sec)}<br>
+          cotangente(cot) = ${fmtT(cot)}
+        </div>
+      </div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content">
+        <div class="step-title">Funciones inversas (en grados)</div>
+        <div class="step-val">
+          arcsin = ${hi(fmt(Math.asin(Math.max(-1,Math.min(1,sen)))*180/Math.PI,6),'amber')}°<br>
+          arccos = ${hi(fmt(Math.acos(Math.max(-1,Math.min(1,cos)))*180/Math.PI,6),'amber')}°<br>
+          arctan = ${tan !== null ? hi(fmt(Math.atan(tan)*180/Math.PI,6),'amber')+'°' : hi('N/A','red')}
+        </div>
+      </div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content">
+        <div class="step-title">Identidades trigonométricas</div>
+        <div class="verify-box ok">
+          sin²θ + cos²θ = ${fmt(id1,10)} ✔ (debe ser 1)<br>
+          sin(2θ) = 2·sin·cos = ${hi(fmt(id2,8),'cyan')}<br>
+          cos(2θ) = cos²−sin² = ${hi(fmt(id3,8),'cyan')}
+        </div>
+      </div></div>
+    </div>`;
+
+  addResult(`📐 Trigonometría: ${fmt(grados,4)}°`, html);
+}
+
+// ──────────────────────────────────────────────────────────
+//  7. FACTORIZACIÓN
+// ──────────────────────────────────────────────────────────
+function calcFactorizacion() {
+  const n = parseInt($('fa_n').value);
+  const mStr = $('fa_m').value.trim();
+  if (isNaN(n) || n < 1) return alert('Ingresa un número entero positivo.');
+
+  const factores = factorizar(n);
+  const primo = esPrimo(n);
+
+  // Divisores
+  const divisores = [];
+  for (let i = 1; i <= Math.min(n, 1e6); i++) if (n % i === 0) divisores.push(i);
+  const sumaPropios = divisores.slice(0,-1).reduce((a,b)=>a+b,0);
+  const clasif = sumaPropios === n ? '★ Número PERFECTO' : sumaPropios > n ? 'Número abundante' : 'Número deficiente';
+  const clasifCls = sumaPropios === n ? 'green' : sumaPropios > n ? 'amber' : '';
+
+  // Notación de factores
+  const notacion = Object.entries(factores)
+    .map(([p,e]) => e>1 ? `${p}<sup>${e}</sup>` : p)
+    .join(' × ');
+
+  // Pasos de factorización
+  let tmp = n, pasosF = [];
+  Object.entries(factores).forEach(([p,e]) => {
+    for (let i=0;i<e;i++) {
+      pasosF.push({num:tmp, div:parseInt(p), res:tmp/parseInt(p)});
+      tmp = tmp/parseInt(p);
+    }
+  });
+
+  let mcdMcmHtml = '';
+  if (mStr && !isNaN(parseInt(mStr))) {
+    const m = parseInt(mStr);
+    const g = gcd(n, m), l = lcm(n, m);
+    mcdMcmHtml = `<div class="step"><div class="step-num">5</div><div class="step-content">
+      <div class="step-title">MCD y MCM con ${m}</div>
+      <div class="verify-box info">
+        MCD(${n}, ${m}) = ${hi(fmt(g),'cyan')}<br>
+        MCM(${n}, ${m}) = ${hi(fmt(l),'cyan')}
+      </div>
+    </div></div>`;
+  }
+
+  const html = `
+    <div class="big-result">
+      <div class="big-num">${n.toLocaleString('es')}</div>
+      ${primo ? `<div class="chip green" style="margin-bottom:6px">★ Número Primo</div>` : ''}
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content">
+        <div class="step-title">Proceso de factorización (divisiones sucesivas)</div>
+        <table class="step-table"><thead><tr><th>Número</th><th>÷ Factor primo</th><th>= Resultado</th></tr></thead>
+        <tbody>${pasosF.map(p=>`<tr><td class="num">${p.num}</td><td class="ok">${p.div}</td><td class="num">${p.res}</td></tr>`).join('')}</tbody>
+        </table>
+      </div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content">
+        <div class="step-title">Descomposición en factores primos</div>
+        <div class="step-val">${n.toLocaleString('es')} = ${notacion}</div>
+      </div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content">
+        <div class="step-title">Divisores (${divisores.length} en total)</div>
+        <div class="chips">${divisores.map(d=>chip(d.toLocaleString('es'))).join('')}</div>
+      </div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content">
+        <div class="step-title">Clasificación (suma divisores propios = ${sumaPropios.toLocaleString('es')})</div>
+        <div class="verify-box ${clasifCls || 'info'}">${clasif}<br>Suma propios: ${sumaPropios.toLocaleString('es')} ${sumaPropios===n?'= ':''}${sumaPropios>n?'> ':'< '}${n.toLocaleString('es')}</div>
+      </div></div>
+      ${mcdMcmHtml}
+    </div>`;
+
+  addResult(`🔍 Factorización: ${n.toLocaleString('es')}`, html);
+}
+
+// ──────────────────────────────────────────────────────────
+//  8. BASES
+// ──────────────────────────────────────────────────────────
+function calcBases() {
+  const base = parseInt($('b_base').value);
+  const numStr = $('b_num').value.trim().toUpperCase();
+  if (!numStr) return alert('Ingresa un número.');
+
+  let decimal;
+  try {
+    decimal = parseInt(numStr, base);
+    if (isNaN(decimal)) throw new Error();
+  } catch {
+    return alert(`El valor "${numStr}" no es válido en base ${base}.`);
+  }
+
+  // Proceso decimal → binario
+  let tmp = decimal, pasosBin = [];
+  while (tmp > 0) {
+    pasosBin.push({ num: tmp, cociente: Math.floor(tmp/2), residuo: tmp%2 });
+    tmp = Math.floor(tmp/2);
+  }
+
+  const html = `
+    <div class="big-result">
+      <div class="big-num">${decimal.toLocaleString('es')}</div>
+      <div class="big-label">decimal</div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content">
+        <div class="step-title">Conversiones</div>
+        <div class="verify-box info">
+          Decimal (base 10) = ${hi(decimal.toLocaleString('es'),'cyan')}<br>
+          Binario (base  2) = ${hi(decimal.toString(2),'amber')}<br>
+          Octal   (base  8) = ${hi(decimal.toString(8),'green')}<br>
+          Hexadec (base 16) = ${hi(decimal.toString(16).toUpperCase(),'violet')}
+        </div>
+      </div></div>
+      ${pasosBin.length > 0 ? `<div class="step"><div class="step-num">2</div><div class="step-content">
+        <div class="step-title">Proceso Decimal → Binario (divisiones por 2)</div>
+        <table class="step-table"><thead><tr><th>Número</th><th>÷ 2 = Cociente</th><th>Residuo</th></tr></thead>
+        <tbody>${pasosBin.map(p=>`<tr><td class="num">${p.num}</td><td class="num">${p.cociente}</td><td class="res">${p.residuo}</td></tr>`).join('')}</tbody>
+        </table>
+        <div class="step-val" style="margin-top:8px">
+          Leyendo residuos de abajo hacia arriba: ${hi(decimal.toString(2),'cyan')}
+        </div>
+      </div></div>` : ''}
+    </div>`;
+
+  addResult(`🔄 Conversión: ${numStr} (base ${base})`, html);
+}
+
+// ──────────────────────────────────────────────────────────
+//  9. CALCULADORA RÁPIDA
+// ──────────────────────────────────────────────────────────
+const MATH_SCOPE = {
+  sqrt: Math.sqrt, cbrt: Math.cbrt,
+  log: Math.log, log10: Math.log10, log2: Math.log2,
+  sin: Math.sin, cos: Math.cos, tan: Math.tan,
+  asin: Math.asin, acos: Math.acos, atan: Math.atan,
+  sinh: Math.sinh, cosh: Math.cosh, tanh: Math.tanh,
+  exp: Math.exp, ceil: Math.ceil, floor: Math.floor,
+  abs: Math.abs, round: Math.round, pow: Math.pow,
+  factorial(n) {
+    n = Math.floor(n); if (n < 0) return NaN;
+    if (n === 0 || n === 1) return 1;
+    let r = 1; for (let i=2; i<=n; i++) r*=i; return r;
+  },
+  gcd, lcm,
+  PI: Math.PI, E: Math.E, tau: 2*Math.PI,
+};
+
+let quickHistory = [];
+
+function calcRapida() {
+  const expr = $('r_expr').value.trim();
+  if (!expr) return;
+
+  let result, isErr = false;
+  try {
+    const fn = new Function(...Object.keys(MATH_SCOPE), `"use strict"; return (${expr});`);
+    result = fn(...Object.values(MATH_SCOPE));
+    quickHistory.push({ expr, result });
+  } catch(e) {
+    result = e.message;
+    isErr = true;
+  }
+
+  const panel = $('resultPanel');
+  const empty = $('emptyState');
+  if (empty) empty.remove();
+
+  // buscar o crear bloque de calculadora rápida
+  let block = panel.querySelector('.quick-block');
+  if (!block) {
+    block = document.createElement('div');
+    block.className = 'result-block quick-block';
+    block.innerHTML = `<div class="rb-header"><div class="rb-dot"></div>⚡ Calculadora Rápida — Historial</div>
+      <div class="rb-body"><div class="quick-output" id="quickOut"></div></div>`;
+    panel.appendChild(block);
+  }
+
+  const out = $('quickOut');
+  const line = document.createElement('div');
+  line.className = 'quick-line';
+  line.innerHTML = `
+    <span class="quick-prompt">&gt;&gt;</span>
+    <span class="quick-expr">${expr}</span>
+    <span class="quick-eq">=</span>
+    <span class="${isErr ? 'quick-err' : 'quick-res'}">${isErr ? '✘ '+result : result}</span>`;
+  out.appendChild(line);
+  out.scrollTop = out.scrollHeight;
+  $('r_expr').value = '';
+}
+
+// ──────────────────────────────────────────────────────────
+//  INICIO
+// ──────────────────────────────────────────────────────────
+showModule('division');
+</script>
+</body>
+</html>
